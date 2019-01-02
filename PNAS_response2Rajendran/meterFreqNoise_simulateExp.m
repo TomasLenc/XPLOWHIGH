@@ -96,6 +96,9 @@ mX_res = zeros(length(freq_jitter_sd),n_experiments,n_partic,2,N);
 H_zscore = nan(length(freq_jitter_sd),n_experiments); 
 P_zscore = nan(length(freq_jitter_sd),n_experiments); 
 
+H_ITPC = nan(length(freq_jitter_sd),n_experiments); 
+P_ITPC = nan(length(freq_jitter_sd),n_experiments); 
+
 H_phase_coherence = nan(length(freq_jitter_sd),n_experiments); 
 P_phase_coherence = nan(length(freq_jitter_sd),n_experiments); 
 
@@ -188,7 +191,6 @@ parfor jitteri=1:n_jitters
 
         end
         
-        
         % calculate meter zscores and do the ttest
         time_avg = squeeze(mean(response,2)); 
 
@@ -207,7 +209,14 @@ parfor jitteri=1:n_jitters
         meter_zscore_diff = z_meterRel_s - z_meterRel_s_jittered; 
         [H_zscore(jitteri,expi),P_zscore(jitteri,expi)] = ttest(z_meterRel_s,z_meterRel_s_jittered); 
 
-         
+        
+        % calculate ITPC and do the ttest
+        aX = angle(fft(response,[],4)); 
+        beat_angles = aX(:,:,:,frex_idx(3)); 
+        ITPC = abs(mean(exp(1i*beat_angles),2)); 
+        [H_ITPC(jitteri,expi),P_ITPC(jitteri,expi)] = ttest(ITPC(:,:,1),ITPC(:,:,2)); 
+
+        
         % do the ttest on phase-locking values
         phase_locking_mean = mean(phase_locking,2); 
         phase_locking_beat = squeeze(phase_locking_mean(:,:,:,3)); 
@@ -228,7 +237,8 @@ end
 for jitteri=1:length(freq_jitter_sd)
     fprintf('\n-------------------------\nFrequency jitter = %.2f\n',freq_jitter_sd(jitteri))
     fprintf('Proportion of experiments with significant meter zscore difference = %.2f\n',  sum(H_zscore(jitteri,:))/n_experiments)
-    fprintf('Proportion of experiments with significant stimulus-response coherence difference = %.2f\n',  sum(H_phase_coherence(jitteri,:))/n_experiments)
+    fprintf('Proportion of experiments with significant ITPC difference = %.2f\n',  sum(H_ITPC(jitteri,:))/n_experiments)
+    fprintf('Proportion of experiments with significant phase-coherence difference = %.2f\n',  sum(H_phase_coherence(jitteri,:))/n_experiments)
 end
 
 
@@ -285,37 +295,62 @@ for triali=1:n_trials
     end
 end
 
-% plot the original and jittered version 
+
+
+
+% plot one simulated trial of the original and jittered condition (overlay succesive cycles)
+
+t_win = [0:round(length(pattern)*IOI*fs)-1]/fs; 
 figure('color','white')
 subplot 211
-plot(t,resp_standard,'k','LineWidth',1.7); 
-hold on
-plot(beat_times,max(resp_standard)*1.1,'ro','MarkerFaceColor','r'); 
-xlim([0,(length(pattern)*IOI)*3])
-box off
-title('original')
-subplot 212
-plot(t,resp_jittered,'LineWidth',1.7,'color',[0.4902,0.1804,0.5608]); 
-hold on
-plot(beat_times,max(resp_jittered)*1.1,'ro','MarkerFaceColor','r'); 
-xlim([0,(length(pattern)*IOI)*3])
-box off
-title('jittered frequency')
-xlabel('time (s)')
+for wini=1:n_cycles
+    idx = (wini-1)*round(length(pattern)*IOI*fs); 
+    plot(t_win, resp_standard(idx+1:idx+round(length(pattern)*IOI*fs)),'k','LineWidth',0.6); 
+    hold on
+    box off
+    title('original')
+end
+plot(0.8*[0,1,2],max(resp_standard)*1.1,'ro','MarkerFaceColor','r'); 
+ylabel('amplitude')
+set(gca,'FontSize',18,'XLim',[0,2.4])
 
-% plot FFT spectra of the waveforms
-figure('name', 'FFT of the two waveforms')
+subplot 212
+for wini=1:n_cycles
+    idx = (wini-1)*round(length(pattern)*IOI*fs); 
+    plot(t_win, resp_jittered(idx+1:idx+round(length(pattern)*IOI*fs)),'color',[0.4902,0.1804,0.5608],'LineWidth',0.6); 
+    hold on
+    box off
+    title('jittered')
+end
+plot(0.8*[0,1,2],max(resp_jittered)*1.1,'ro','MarkerFaceColor','r'); 
+set(gca,'FontSize',18,'XLim',[0,2.4])
+xlabel('time (s)')
+ylabel('amplitude')
+
+
+
+
+
+% plot amplitude spectra of the simulated trials (notice how meter
+% frequencies in the jittered condition have smaller amplitudes)
+
+figure('color','white','name','FFT of the two waveforms')
 subplot 211
 mXtmp = abs(fft(resp_standard)); 
 plot([0:hN-1]/N*fs,mXtmp(1:hN),'b','LineWidth',1.7); 
 xlim([0.1,6])
 title('original')
+ylabel('amplitude')
+set(gca,'FontSize',18)
+
 subplot 212
 mXtmp = abs(fft(resp_jittered)); 
 plot([0:hN-1]/N*fs,mXtmp(1:hN),'r','LineWidth',1.7); 
 xlim([0.1,6])
-title('jittered frequency')
+title('jittered')
 xlabel('frequency (Hz)'); 
+ylabel('amplitude')
+set(gca,'FontSize',18)
 
         
     
