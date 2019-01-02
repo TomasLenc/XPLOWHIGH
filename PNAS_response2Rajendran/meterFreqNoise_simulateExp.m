@@ -108,7 +108,7 @@ H_phase_coherence_3vs2 = nan(1,n_experiments);
 
 c   = parcluster('local'); % build the 'local' cluster object
 nw  = c.NumWorkers        % get the number of workers
-if isempty(gcp('nocreate')); parpool(3); end; % use parallel computation to speed up the simulation
+if isempty(gcp('nocreate')); parpool(nw); end; % use parallel computation to speed up the simulation
 
         
 parfor expi=1:n_experiments
