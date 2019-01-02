@@ -4,7 +4,8 @@
 % 
 % 
 % This code shows that decreasing coherence of the response at meter-related frequencies decreases 
-% stimulus-response phase locking at the beat frequency, but also meter-related z-scored amplitudes as revealed by frequency-tagging. 
+% stimulus-response phase locking at the beat frequency, but also meter-related z-scored amplitudes 
+% as revealed by frequency-tagging. 
 % 
 % 
 % 
@@ -28,7 +29,7 @@ n_beats         = n_cycles*3;
 beat_times      = IOI*4 * [1:n_beats]; 
 pattern_times   = IOI*12 * [1:n_cycles]; 
 
-n_experiments   = 5; 
+n_experiments   = 50; 
 n_partic        = 20; 
 n_trials        = 10; 
 
@@ -41,6 +42,7 @@ different_phases_between_cond_BOOL = 1; % for each participant, generate random 
 % frequency-jittering parameters
 freq_jitter_mean = 0; % mean
 freq_jitter_sd = [0.05, 0.1, 0.2]; % standard deviation
+n_jitter = length(freq_jitter_sd); 
 
 % slding window fft parameters
 fft_win_overlap = 0.5; % 50% overlap
@@ -99,23 +101,25 @@ P_zscore = nan(length(freq_jitter_sd),n_experiments);
 H_phase_coherence = nan(length(freq_jitter_sd),n_experiments); 
 P_phase_coherence = nan(length(freq_jitter_sd),n_experiments); 
 
-
+H_phase_coherence_2vs1 = nan(1,n_experiments); 
+H_phase_coherence_3vs2 = nan(1,n_experiments); 
 
 % ------------- run the simulation -------------
 
 if isempty(gcp('nocreate')); parpool(3); end; % use parallel computation to speed up the simulation
 
-n_jitters = length(freq_jitter_sd); 
-parfor jitteri=1:n_jitters
-        disp(sprintf('\nfrequency jitter SD %d out of %d\n\n',jitteri,length(freq_jitter_sd)))
         
-        
-    for expi=1:n_experiments
-        disp(sprintf('epxeriment %d',expi))
+parfor expi=1:n_experiments
+    disp(sprintf('epxeriment %d',expi))
 
         % allocate variables for the current experiment
+        phase_locking = zeros(n_jitter,n_partic, n_trials, 2, length(frex)); % phase-locking between stimulus and response for each participant, condition and trial
+    
+    for jitteri=1:n_jitter
+        disp(sprintf('\nfrequency jitter SD %d out of %d\n\n',jitteri,length(freq_jitter_sd)))
+    
+        % allocate variables for the current experiment
         response = zeros(n_partic, n_trials, 2, N); % simulated responses in the time domain
-        phase_locking = zeros(n_partic, n_trials, 2, length(frex)); % phase-locking between stimulus and response for each participant, condition and trial
         
         
         for partici=1:n_partic
@@ -181,8 +185,8 @@ parfor jitteri=1:n_jitters
                 plv_standard = abs(mean(exp(1i*(aX_resp_standard_slidingWin-aX_stim_slidingWin)),1)); 
                 plv_jittered = abs(mean(exp(1i*(aX_resp_jittered_slidingWin-aX_stim_slidingWin)),1)); 
                 
-                phase_locking(partici,triali,1,:) = plv_standard; 
-                phase_locking(partici,triali,2,:) = plv_jittered; 
+                phase_locking(jitteri,partici,triali,1,:) = plv_standard; 
+                phase_locking(jitteri,partici,triali,2,:) = plv_jittered; 
                 
             end
 
@@ -215,12 +219,17 @@ parfor jitteri=1:n_jitters
 
         
         % do the ttest on phase-locking values
-        phase_locking_mean = mean(phase_locking,2); 
-        phase_locking_beat = squeeze(phase_locking_mean(:,:,:,3)); 
+        phase_locking_mean = mean(phase_locking(jitteri,:,:,:,:),3); 
+        phase_locking_beat = squeeze(phase_locking_mean(:,:,:,:,3)); 
         [H_phase_coherence(jitteri,expi),P_phase_coherence(jitteri,expi)] = ttest(phase_locking_beat(:,1),phase_locking_beat(:,2)); 
         
     end
 
+    phase_locking_mean = mean(phase_locking,3); 
+    phase_locking_beat_diff = phase_locking_mean(:,:,:,1,3) - phase_locking_mean(:,:,:,2,3); 
+    H_phase_coherence_2vs1(expi) = ttest(phase_locking_beat_diff(2,:),phase_locking_beat_diff(1,:)); 
+    H_phase_coherence_3vs2(expi) = ttest(phase_locking_beat_diff(3,:),phase_locking_beat_diff(2,:)); 
+    
 end
 
 
@@ -238,6 +247,9 @@ for jitteri=1:length(freq_jitter_sd)
 end
 
 
+fprintf('\n\n\n-------------------------\n')
+fprintf('Proportion of experiments with significantly larger difference in \nphase-coherence between standard and jittered condition when comparing \njitter with standard deviation %.3f compared to %.3f = %.2f\n', freq_jitter_sd(2), freq_jitter_sd(1), sum(H_phase_coherence_2vs1/n_experiments))
+fprintf('\n\nProportion of experiments with significantly larger difference in \nphase-coherence between standard and jittered condition when comparing \njitter with standard deviation %.3f compared to %.3f = %.2f\n', freq_jitter_sd(3), freq_jitter_sd(2), sum(H_phase_coherence_3vs2/n_experiments))
 
 
 
