@@ -3,7 +3,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 
 % 
-% This code shows that decreasing coherence of the response at meter-related frequencies decreases ITPC at the beat frequency, 
+% This code shows that decreasing coherence of the response at meter-related frequencies decreases 
 % stimulus-response phase locking at the beat frequency, but also meter-related z-scored amplitudes as revealed by frequency-tagging. 
 % 
 % 
@@ -28,7 +28,7 @@ n_beats         = n_cycles*3;
 beat_times      = IOI*4 * [1:n_beats]; 
 pattern_times   = IOI*12 * [1:n_cycles]; 
 
-n_experiments   = 50; 
+n_experiments   = 5; 
 n_partic        = 20; 
 n_trials        = 10; 
 
@@ -95,9 +95,6 @@ mX_res = zeros(length(freq_jitter_sd),n_experiments,n_partic,2,N);
 
 H_zscore = nan(length(freq_jitter_sd),n_experiments); 
 P_zscore = nan(length(freq_jitter_sd),n_experiments); 
-
-H_ITPC = nan(length(freq_jitter_sd),n_experiments); 
-P_ITPC = nan(length(freq_jitter_sd),n_experiments); 
 
 H_phase_coherence = nan(length(freq_jitter_sd),n_experiments); 
 P_phase_coherence = nan(length(freq_jitter_sd),n_experiments); 
@@ -237,7 +234,6 @@ end
 for jitteri=1:length(freq_jitter_sd)
     fprintf('\n-------------------------\nFrequency jitter = %.2f\n',freq_jitter_sd(jitteri))
     fprintf('Proportion of experiments with significant meter zscore difference = %.2f\n',  sum(H_zscore(jitteri,:))/n_experiments)
-    fprintf('Proportion of experiments with significant ITPC difference = %.2f\n',  sum(H_ITPC(jitteri,:))/n_experiments)
     fprintf('Proportion of experiments with significant phase-coherence difference = %.2f\n',  sum(H_phase_coherence(jitteri,:))/n_experiments)
 end
 
