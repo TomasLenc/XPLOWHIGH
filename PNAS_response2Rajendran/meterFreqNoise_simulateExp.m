@@ -8,7 +8,7 @@
 % as revealed by frequency-tagging. 
 % 
 % 
-% 
+% (c) TOMAS LENC, tomas.lenc@gmail.com
 % 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -106,6 +106,8 @@ H_phase_coherence_3vs2 = nan(1,n_experiments);
 
 % ------------- run the simulation -------------
 
+c   = parcluster('local'); % build the 'local' cluster object
+nw  = c.NumWorkers        % get the number of workers
 if isempty(gcp('nocreate')); parpool(3); end; % use parallel computation to speed up the simulation
 
         
