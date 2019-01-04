@@ -212,14 +212,7 @@ parfor expi=1:n_experiments
         meter_zscore_diff = z_meterRel_s - z_meterRel_s_jittered; 
         [H_zscore(jitteri,expi),P_zscore(jitteri,expi)] = ttest(z_meterRel_s,z_meterRel_s_jittered); 
 
-        
-        % calculate ITPC and do the ttest
-        aX = angle(fft(response,[],4)); 
-        beat_angles = aX(:,:,:,frex_idx(3)); 
-        ITPC = abs(mean(exp(1i*beat_angles),2)); 
-        [H_ITPC(jitteri,expi),P_ITPC(jitteri,expi)] = ttest(ITPC(:,:,1),ITPC(:,:,2)); 
-
-        
+                
         % do the ttest on phase-locking values
         phase_locking_mean = mean(phase_locking(jitteri,:,:,:,:),3); 
         phase_locking_beat = squeeze(phase_locking_mean(:,:,:,:,3)); 
