@@ -311,7 +311,7 @@ for wini=1:n_cycles
     plot(t_win, resp_standard(idx+1:idx+round(length(pattern)*IOI*fs)),'k','LineWidth',0.6); 
     hold on
     box off
-    title('original')
+    title('standard')
 end
 plot(0.8*[0,1,2],max(resp_standard)*1.1,'ro','MarkerFaceColor','r'); 
 ylabel('amplitude')
@@ -342,7 +342,7 @@ subplot 211
 mXtmp = abs(fft(resp_standard)); 
 plot([0:hN-1]/N*fs,mXtmp(1:hN),'b','LineWidth',1.7); 
 xlim([0.1,6])
-title('original')
+title('standard')
 ylabel('amplitude')
 set(gca,'FontSize',18)
 
@@ -357,6 +357,128 @@ set(gca,'FontSize',18)
 
         
     
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% PLOT ZSCORES IN ONE EXPERIMENT
+
+jitteri = 2; 
+
+% allocate variables for the current experiment
+response = zeros(n_partic, n_trials, 2, N); % simulated responses in the time domain
+
+
+for partici=1:n_partic
+
+    % generate random phases for each participant (and condition if
+    % different_phases_between_cond_BOOL == 1)
+    phases_half = (rand(1,N/2-1)*2*pi-pi); 
+    phases_s = [0, fliplr(-phases_half), 0, phases_half]; 
+    if different_phases_between_cond_BOOL
+        phases_half = (rand(1,N/2-1)*2*pi-pi); 
+    end
+    phases_s_jittered = [0, fliplr(-phases_half), 0, phases_half]; 
+
+
+    for triali=1:n_trials
+
+        % generate response in the standard condition
+        frex_idx = find(mX_original_s); 
+        frex_idx = frex_idx(13:end); 
+
+        frex2use = 1/(length(pattern)*IOI) * [0:12]; 
+        amps2use = mX_original_s(frex_idx); 
+        phases2use_s = phases_s(frex_idx); 
+        phases2use_s_jittered = phases_s_jittered(frex_idx); 
+
+        resp_standard = zeros(size(t)); 
+        for fi=1:length(amps2use)
+            resp_standard = resp_standard + amps2use(fi)*cos(2*pi*t*frex2use(fi) + phases2use_s(fi)); 
+        end
+
+        % generate response in the jittered condition
+        resp_jittered = zeros(size(t)); 
+        for fi=1:length(amps2use)        
+            if ismember(frex2use(fi),frex2jitter)
+                f_t = repmat(frex2use(fi), 1, N) + (randn(1,N)+freq_jitter_mean)*freq_jitter_sd(jitteri); 
+                resp_jittered = resp_jittered + amps2use(fi)*cos(2*pi*cumsum(f_t)/fs+phases2use_s_jittered(fi)); 
+            else
+                f_t = repmat(frex2use(fi), 1, N); 
+                resp_jittered = resp_jittered + amps2use(fi)*cos(2*pi*cumsum(f_t)/fs+phases2use_s_jittered(fi)); 
+
+            end
+        end
+
+        response(partici,triali,1,:) = resp_standard; 
+        response(partici,triali,2,:) = resp_jittered; 
+
+    end
+
+end
+
+% calculate meter zscores and do the ttest
+time_avg = squeeze(mean(response,2)); 
+
+frex_idx = round(frex*N/fs)+1; 
+idx_meterRel = [1,3,6,12]; 
+
+mX_simulated = abs(fft(time_avg,[],3))*2/N; 
+
+amps = mX_simulated(:,:,frex_idx); 
+z = zscore(amps,[],3); 
+
+z_meterRel_s = mean(z(:,1,idx_meterRel),3); 
+z_meterRel_s_jittered = mean(z(:,2,idx_meterRel),3); 
+
+figure('color','white'); 
+h = axes; 
+plot([0,1],[z_meterRel_s, z_meterRel_s_jittered], 'r-o', 'MarkerFaceColor', 'red'); 
+box off
+ylabel('meter z-score')
+set(gca, 'xlim', [-0.2,1.2], 'XTick', [0,1], 'XTickLabel', {'standard','jittered'}, 'FontSize', 18, ...
+    'YTick', h.YLim)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
