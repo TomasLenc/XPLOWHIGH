@@ -260,7 +260,7 @@ fprintf('\n\nProportion of experiments with significantly larger difference in \
 %% PLOT 2 EXAMPLE TRIALS
 
 
-freq_jitter_sd2plot = 0.1; 
+freq_jitter_sd2plot = 0.3; 
 
 phases_half = (rand(1,N/2-1)*2*pi-pi); 
 phases_s = [0, fliplr(-phases_half), 0, phases_half]; 
@@ -304,7 +304,7 @@ end
 % plot one simulated trial of the original and jittered condition (overlay succesive cycles)
 
 t_win = [0:round(length(pattern)*IOI*fs)-1]/fs; 
-figure('color','white')
+figure('color','white','position',[750 537 311 388]); 
 subplot 211
 for wini=1:n_cycles
     idx = (wini-1)*round(length(pattern)*IOI*fs); 
@@ -380,7 +380,7 @@ set(gca,'FontSize',18)
 
 %% PLOT ZSCORES IN ONE EXPERIMENT
 
-jitteri = 2; 
+freq_jitter_sd2plot = 0.3; 
 
 % allocate variables for the current experiment
 response = zeros(n_partic, n_trials, 2, N); % simulated responses in the time domain
@@ -418,7 +418,7 @@ for partici=1:n_partic
         resp_jittered = zeros(size(t)); 
         for fi=1:length(amps2use)        
             if ismember(frex2use(fi),frex2jitter)
-                f_t = repmat(frex2use(fi), 1, N) + (randn(1,N)+freq_jitter_mean)*freq_jitter_sd(jitteri); 
+                f_t = repmat(frex2use(fi), 1, N) + (randn(1,N)+freq_jitter_mean)*freq_jitter_sd2plot; 
                 resp_jittered = resp_jittered + amps2use(fi)*cos(2*pi*cumsum(f_t)/fs+phases2use_s_jittered(fi)); 
             else
                 f_t = repmat(frex2use(fi), 1, N); 
@@ -448,7 +448,7 @@ z = zscore(amps,[],3);
 z_meterRel_s = mean(z(:,1,idx_meterRel),3); 
 z_meterRel_s_jittered = mean(z(:,2,idx_meterRel),3); 
 
-figure('color','white'); 
+figure('color','white','position',[1069 579 326 290]); 
 h = axes; 
 plot([0,1],[z_meterRel_s, z_meterRel_s_jittered], 'r-o', 'MarkerFaceColor', 'red'); 
 box off
