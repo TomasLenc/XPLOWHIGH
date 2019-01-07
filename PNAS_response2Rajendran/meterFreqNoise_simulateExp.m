@@ -378,13 +378,13 @@ set(gca,'FontSize',18)
 
 
 
-%% PLOT ZSCORES IN ONE EXPERIMENT
+%% PLOT ZSCORES AND PHASE-LOCKING IN ONE EXPERIMENT
 
 freq_jitter_sd2plot = 0.3; 
 
 % allocate variables for the current experiment
 response = zeros(n_partic, n_trials, 2, N); % simulated responses in the time domain
-
+phase_locking = zeros(n_partic, n_trials, 2, length(frex)); % phase-locking between stimulus and response for each participant, condition and trial
 
 for partici=1:n_partic
 
@@ -430,11 +430,34 @@ for partici=1:n_partic
         response(partici,triali,1,:) = resp_standard; 
         response(partici,triali,2,:) = resp_jittered; 
 
+
+        % calculate stimulus-response phase locking for this trial
+        aX_resp_standard_slidingWin = zeros(fft_n_win, length(frex)); 
+        for wini=1:fft_n_win
+            idx = (wini-1)*round(fft_win_dur*fft_win_overlap*fs); 
+            x = resp_standard(idx+1:idx+round(fft_win_dur*fs)); 
+            aX = angle(fft(x)); 
+            aX_resp_standard_slidingWin(wini,:) = aX(fft_win_frex_idx); 
+        end
+        aX_resp_jittered_slidingWin = zeros(fft_n_win, length(frex)); 
+        for wini=1:fft_n_win
+            idx = (wini-1)*round(fft_win_dur*fft_win_overlap*fs); 
+            x = resp_jittered(idx+1:idx+round(fft_win_dur*fs));                     
+            aX = angle(fft(x)); 
+            aX_resp_jittered_slidingWin(wini,:) = aX(fft_win_frex_idx); 
+        end
+        plv_standard = abs(mean(exp(1i*(aX_resp_standard_slidingWin-aX_stim_slidingWin)),1)); 
+        plv_jittered = abs(mean(exp(1i*(aX_resp_jittered_slidingWin-aX_stim_slidingWin)),1)); 
+
+        phase_locking(partici,triali,1,:) = plv_standard; 
+        phase_locking(partici,triali,2,:) = plv_jittered; 
+        
+        
     end
 
 end
 
-% calculate meter zscores and do the ttest
+% calculate meter zscores
 time_avg = squeeze(mean(response,2)); 
 
 frex_idx = round(frex*N/fs)+1; 
@@ -448,20 +471,32 @@ z = zscore(amps,[],3);
 z_meterRel_s = mean(z(:,1,idx_meterRel),3); 
 z_meterRel_s_jittered = mean(z(:,2,idx_meterRel),3); 
 
-figure('color','white','position',[1069 579 326 290]); 
-h = axes; 
+
+
+
+% calculate phase-locking values
+phase_locking_mean = mean(phase_locking(:,:,:,:),2); % mean over trials
+phase_locking_beat = squeeze(phase_locking_mean(:,:,1,3)); % only the beat frequency 
+phase_locking_beat_jittered = squeeze(phase_locking_mean(:,:,2,3)); % only the beat frequency 
+
+
+
+
+% PLOT 
+figure('color','white','position', [1069 579 235 371]); 
+h = subplot(211); 
+plot([0,1],[phase_locking_beat, phase_locking_beat_jittered], 'r-o', 'MarkerFaceColor', 'red'); 
+box off
+ylabel('phase-locking value')
+set(gca, 'xlim', [-0.2,1.2], 'XTick', [0,1], 'XTickLabel', {}, 'FontSize', 18, ...
+    'YTick', h.YLim)
+
+h = subplot(212); 
 plot([0,1],[z_meterRel_s, z_meterRel_s_jittered], 'r-o', 'MarkerFaceColor', 'red'); 
 box off
 ylabel('meter z-score')
 set(gca, 'xlim', [-0.2,1.2], 'XTick', [0,1], 'XTickLabel', {'standard','jittered'}, 'FontSize', 18, ...
     'YTick', h.YLim)
-
-
-
-
-
-
-
 
 
 
