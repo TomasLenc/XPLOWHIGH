@@ -1,6 +1,6 @@
 
 # Reply to Rajendran and Schnupp: Frequency-tagging is sensitive to the temporal structure of signals<p align="center">Tomas Lenc<sup>a</sup>, Peter E. Keller<sup>a</sup>, Manuel Varlet<sup>a</sup>, Sylvie Nozaradan<sup>a,b,s</sup></p>
-<sup>a</sup> MARCS Institute for Brain, Behaviour and Development Western Sydney University, Locked Bag 1797 Penrith NSW 2751 Australia 
+<sup>a</sup> MARCS Institute for Brain, Behaviour and Development,  Western Sydney University, Locked Bag 1797 Penrith NSW 2751 Australia 
 <sup>b</sup> Institute of Neuroscience (IONS), Université catholique de Louvain (UCL), Avenue Mounier 53 Woluwe-Saint-Lambert 1200 Belgium <sup>c</sup> International Laboratory for Brain, Music and Sound Research (BRAMS), Pavillon 1420 Mont Royal, FAS – Département de psychologie, CP 6128, succ. Centre Ville, Montréal, QC H3C 3J7 <sup>1</sup> corresponding author&nbsp;  __<p align="center">Appendix</p>__
 
 &nbsp;  
